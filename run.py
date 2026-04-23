@@ -187,6 +187,86 @@ def run():
 
 
 if __name__ == "__main__":
+    # --- CLI Commands ---
+    if len(sys.argv) > 1:
+        cmd = sys.argv[1]
+
+        if cmd == "--tax-report":
+            from tax_tracker import get_yearly_summary, get_transactions_for_skat
+            year = int(sys.argv[2]) if len(sys.argv) > 2 else date.today().year
+            summary = get_yearly_summary(year)
+            if "error" in summary:
+                print(summary["error"])
+                sys.exit(1)
+            print(f"\n📊 Tax Summary for {year}")
+            print(f"   Buys: {summary['total_buys']}  |  Sells: {summary['total_sells']}")
+            print(f"   Total bought: ${summary['total_buy_value_usd']:,.2f}")
+            print(f"   Total sold:   ${summary['total_sell_value_usd']:,.2f}")
+            print(f"   Total fees:   ${summary['total_fees_usd']:,.2f}")
+            print(f"   Symbols:      {', '.join(summary['symbols_traded'])}")
+            if summary['has_paper_trades']:
+                print("   ⚠️  Includes paper trades (not taxable)")
+            print()
+            export_path = get_transactions_for_skat(year)
+            print(f"📄 SKAT export saved to: {export_path}")
+            sys.exit(0)
+
+        elif cmd == "--year-end":
+            from tax_tracker import generate_year_end_report
+            from tools import get_positions, get_latest_quote
+            year = int(sys.argv[2]) if len(sys.argv) > 2 else date.today().year
+            positions = get_positions()
+            if isinstance(positions, dict) and "error" in positions:
+                print(f"Error fetching positions: {positions['error']}")
+                sys.exit(1)
+            if not positions:
+                print("No open positions to report.")
+                sys.exit(0)
+            for pos in positions:
+                quote = get_latest_quote(pos["symbol"])
+                if "error" not in quote:
+                    pos["current_price"] = quote.get("last_price", quote.get("ask_price", 0))
+            filepath = generate_year_end_report(year, positions)
+            print(f"\n📄 Year-end report saved to: {filepath}")
+            print(f"   This is required for lagerbeskatning (mark-to-market) reporting to SKAT.")
+            sys.exit(0)
+
+        elif cmd == "--tax-help":
+            print("""
+🇩🇰 Danish Tax Reporting (SKAT) — Quick Guide
+═══════════════════════════════════════════════
+
+QQQ and SPY are US ETFs NOT on SKAT's positivliste.
+They are taxed as KAPITALINDKOMST with LAGERBESKATNING.
+
+What this means:
+  • You owe tax on UNREALIZED gains each year (Dec 31 valuation)
+  • Losses are also deductible under lagerbeskatning
+  • Tax rate: your marginal income tax rate (37-42%)
+  • You must self-report via TastSelv (Alpaca is a foreign broker)
+
+Commands:
+  python run.py --tax-report [YEAR]   Generate yearly transaction summary + SKAT CSV export
+  python run.py --year-end [YEAR]     Capture Dec 31 positions for lagerbeskatning
+  python run.py --tax-help            Show this help message
+
+Files (in tax/ directory):
+  transactions.csv     All trades (auto-recorded)
+  year_end_YYYY.csv    Year-end mark-to-market snapshot
+  skat_export_YYYY.csv Formatted for TastSelv import
+  dividends.csv        Dividend payments (if any)
+
+⚠️  Always consult a tax professional (revisor) for your specific situation.
+⚠️  Report acquisitions by July 1 of the following year to deduct losses.
+""")
+            sys.exit(0)
+
+        else:
+            print(f"Unknown command: {cmd}")
+            print("Usage: python run.py [--tax-report YEAR | --year-end YEAR | --tax-help]")
+            sys.exit(1)
+
+    # --- Normal trading run ---
     # File-based lock to prevent overlapping cron runs
     lock_fp = open(LOCK_FILE, "w")
     try:

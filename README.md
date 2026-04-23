@@ -85,8 +85,10 @@ crontab -e
 | `run.py` | Main orchestrator — connects AI to Alpaca |
 | `ai_provider.py` | AI provider abstraction — Claude, ChatGPT, Gemini, Grok |
 | `tools.py` | Tool definitions — Alpaca API wrappers with guardrails |
+| `tax_tracker.py` | Danish tax tracking — auto-records all transactions for SKAT |
 | `config.py` | Configuration — loads API keys and settings |
 | `logs/` | Trade logs — timestamped reasoning and actions |
+| `tax/` | Tax records — transactions, year-end reports, SKAT exports |
 
 ## Customization
 
@@ -102,3 +104,31 @@ crontab -e
 - **Paper trading by default** — no real money at risk
 - **Hard-coded guardrails** in `tools.py`: max 2% per trade, max 3 positions, max 3% daily loss
 - All decisions are logged with full reasoning for review
+
+## 🇩🇰 Danish Tax Reporting (SKAT)
+
+Every trade is automatically recorded to `tax/transactions.csv` for SKAT compliance.
+
+QQQ and SPY are US ETFs **not on SKAT's positivliste** — they are taxed as **kapitalindkomst** with **lagerbeskatning** (mark-to-market annually on unrealized gains).
+
+### Tax Commands
+
+```bash
+# View yearly summary + export SKAT-ready CSV
+python run.py --tax-report 2026
+
+# Capture Dec 31 positions for lagerbeskatning
+python run.py --year-end 2026
+
+# Show tax help
+python run.py --tax-help
+```
+
+### What's Tracked
+
+- **Every buy/sell**: date, symbol, ISIN, qty, price, fees, order type
+- **Year-end valuations**: market value on Dec 31 (for unrealized gains tax)
+- **Dividends**: gross amount, US withholding tax, net received
+- **SKAT export**: Danish-formatted CSV (Dato, Køb/Salg, ISIN, Kurs, Værdi)
+
+⚠️ Always consult a Danish tax professional (revisor) for your specific situation.

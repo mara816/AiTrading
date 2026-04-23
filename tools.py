@@ -25,6 +25,7 @@ from alpaca.trading.requests import (
 from alpaca.trading.models import Clock
 
 import config
+from tax_tracker import record_transaction
 
 # --- Clients (initialized once) ---
 
@@ -292,6 +293,24 @@ def place_order(
         return {"error": f"Unknown order type: {order_type}", "order_placed": False}
 
     order = trading_client.submit_order(order_request)
+
+    # Record transaction for tax reporting (SKAT)
+    fill_price = limit_price or (quote.get("ask_price", 0) if "error" not in quote else 0)
+    record_transaction(
+        order_id=str(order.id),
+        symbol=order.symbol,
+        side=side.lower(),
+        quantity=qty,
+        price_per_share=fill_price,
+        fees=0.0,  # Alpaca has zero commission for stocks
+        order_type=order_type,
+        order_status=str(order.status),
+        account_equity=equity,
+        daily_pnl=equity - last_equity,
+        ai_provider=config.AI_PROVIDER,
+        paper_trade=config.ALPACA_PAPER,
+    )
+
     return {
         "order_placed": True,
         "order_id": str(order.id),
@@ -338,7 +357,41 @@ def cancel_order(order_id: str) -> dict:
 def close_position(symbol: str) -> dict:
     """Close an entire position for a symbol."""
     try:
+        # Get position info before closing (for tax tracking)
+        positions = get_positions()
+        pos_info = None
+        if isinstance(positions, list):
+            for p in positions:
+                if p.get("symbol") == symbol.upper():
+                    pos_info = p
+                    break
+
         order = trading_client.close_position(symbol)
+
+        # Record the sell transaction for tax reporting
+        if pos_info:
+            qty = abs(float(pos_info.get("qty", 0)))
+            current_price = float(pos_info.get("current_price", 0))
+            try:
+                account = trading_client.get_account()
+                equity = float(account.equity)
+            except Exception:
+                equity = 0.0
+
+            record_transaction(
+                order_id=str(order.id) if hasattr(order, "id") else "close-" + symbol,
+                symbol=symbol.upper(),
+                side="sell",
+                quantity=qty,
+                price_per_share=current_price,
+                fees=0.0,
+                order_type="market",
+                order_status="filled",
+                account_equity=equity,
+                ai_provider=config.AI_PROVIDER,
+                paper_trade=config.ALPACA_PAPER,
+            )
+
         return {
             "closed": True,
             "symbol": symbol,
