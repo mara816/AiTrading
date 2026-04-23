@@ -12,7 +12,7 @@ needs to be installed.
 import json
 from abc import ABC, abstractmethod
 
-import config
+from . import config
 
 
 class AIProvider(ABC):

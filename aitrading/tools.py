@@ -24,8 +24,8 @@ from alpaca.trading.requests import (
 )
 from alpaca.trading.models import Clock
 
-import config
-from tax_tracker import record_transaction
+from . import config
+from .tax_tracker import record_transaction
 
 # --- Clients (initialized once) ---
 

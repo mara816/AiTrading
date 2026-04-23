@@ -339,7 +339,7 @@ nano ~/AiTrading/.env
 ### Update the Strategy
 ```bash
 ssh pi@<PI_IP_ADDRESS>
-nano ~/AiTrading/strategy.md
+nano ~/AiTrading/prompts/strategy.md
 # Edit the strategy — takes effect on the very next run
 ```
 

@@ -1,7 +1,17 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+# --- Project Paths (centralized) ---
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROMPTS_DIR = PROJECT_ROOT / "prompts"
+DOCS_DIR = PROJECT_ROOT / "docs"
+LOG_DIR = PROJECT_ROOT / "logs"
+TAX_DIR = PROJECT_ROOT / "tax"
+STATE_FILE = PROJECT_ROOT / "state.json"
+LOCK_FILE = PROJECT_ROOT / ".run.lock"
+
+load_dotenv(PROJECT_ROOT / ".env")
 
 
 def _require(key: str) -> str:

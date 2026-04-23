@@ -5,7 +5,7 @@ An AI-powered day trading bot that uses AI (Claude, ChatGPT, Gemini, or Grok) to
 ## How It Works
 
 1. **Cron** triggers `run.py` every 5 minutes during market hours
-2. `run.py` reads `prompt.md` (AI instructions) and `strategy.md` (trading rules)
+2. `run.py` reads `prompts/prompt.md` (AI instructions) and `prompts/strategy.md` (trading rules)
 3. The AI analyzes market data using tools (get prices, check positions, etc.)
 4. The AI decides whether to trade based on the strategy — or sit out
 5. All reasoning and actions are logged to `logs/`
@@ -18,6 +18,28 @@ An AI-powered day trading bot that uses AI (Claude, ChatGPT, Gemini, or Grok) to
 | **Gemini** (Google) | `gemini` | `gemini-2.5-flash` | $0.15–0.50 | `pip install google-generativeai` |
 | **ChatGPT** (OpenAI) | `chatgpt` | `gpt-4.1` | $1–3 | `pip install openai` |
 | **Grok** (xAI) | `grok` | `grok-3` | TBD | `pip install openai` |
+
+## Project Structure
+
+```
+AiTrading/
+├── run.py                      # Entry point — cron runs this
+├── requirements.txt            # Python dependencies
+├── .env.example                # Template for API keys
+├── aitrading/                  # Core package
+│   ├── config.py               # Configuration + centralized paths
+│   ├── ai_provider.py          # AI provider abstraction (Claude, ChatGPT, Gemini, Grok)
+│   ├── tools.py                # Alpaca API wrappers + code-level guardrails
+│   └── tax_tracker.py          # Danish tax tracking for SKAT
+├── prompts/                    # AI input files (editable)
+│   ├── prompt.md               # System prompt — AI role and behavior
+│   └── strategy.md             # Trading strategy playbook
+├── docs/                       # Documentation
+│   ├── SETUP_GUIDE.md          # Raspberry Pi setup + API key instructions
+│   └── TAX_GUIDE.md            # Danish tax guide (SKAT, lagerbeskatning)
+├── logs/                       # Trade logs (auto-generated, gitignored)
+└── tax/                        # Tax records (auto-generated, gitignored)
+```
 
 ## Setup
 
@@ -76,33 +98,19 @@ crontab -e
    - Arguments: `run.py`
    - Start in: `C:\path\to\AiTrading`
 
-## Files
-
-| File | Purpose |
-|---|---|
-| `prompt.md` | System prompt — defines the AI's role and behavior |
-| `strategy.md` | Trading strategy playbook — the rules the AI follows |
-| `run.py` | Main orchestrator — connects AI to Alpaca |
-| `ai_provider.py` | AI provider abstraction — Claude, ChatGPT, Gemini, Grok |
-| `tools.py` | Tool definitions — Alpaca API wrappers with guardrails |
-| `tax_tracker.py` | Danish tax tracking — auto-records all transactions for SKAT |
-| `config.py` | Configuration — loads API keys and settings |
-| `logs/` | Trade logs — timestamped reasoning and actions |
-| `tax/` | Tax records — transactions, year-end reports, SKAT exports |
-
 ## Customization
 
 - **Switch AI provider**: Change `AI_PROVIDER` and `AI_API_KEY` in `.env`
 - **Change model**: Set `AI_MODEL` in `.env` (e.g., `claude-opus-4-20250514`, `gpt-4o`, `gemini-2.5-pro`)
-- **Change strategy**: Edit `strategy.md` — takes effect on next run
-- **Change AI behavior**: Edit `prompt.md`
-- **Change watchlist**: Edit `WATCHLIST` in `config.py`
+- **Change strategy**: Edit `prompts/strategy.md` — takes effect on next run
+- **Change AI behavior**: Edit `prompts/prompt.md`
+- **Change watchlist**: Edit `WATCHLIST` in `aitrading/config.py`
 - **Go live**: Set `ALPACA_PAPER=false` in `.env` (after extensive paper testing!)
 
 ## Safety
 
 - **Paper trading by default** — no real money at risk
-- **Hard-coded guardrails** in `tools.py`: max 2% per trade, max 3 positions, max 3% daily loss
+- **Hard-coded guardrails** in `aitrading/tools.py`: max 2% per trade, max 3 positions, max 3% daily loss
 - All decisions are logged with full reasoning for review
 
 ## 🇩🇰 Danish Tax Reporting (SKAT)
@@ -110,6 +118,8 @@ crontab -e
 Every trade is automatically recorded to `tax/transactions.csv` for SKAT compliance.
 
 QQQ and SPY are US ETFs **not on SKAT's positivliste** — they are taxed as **kapitalindkomst** with **lagerbeskatning** (mark-to-market annually on unrealized gains).
+
+📖 **Full guide**: [docs/TAX_GUIDE.md](docs/TAX_GUIDE.md)
 
 ### Tax Commands
 

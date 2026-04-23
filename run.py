@@ -1,31 +1,29 @@
 #!/usr/bin/env python3
 """
-run.py — Main orchestrator for the AI trading bot.
+run.py — Main entry point for the AI trading bot.
 
-Reads prompt.md + strategy.md, calls Claude API with Alpaca tools,
+Reads prompt.md + strategy.md, calls the AI with Alpaca tools,
 handles the tool-use loop, and logs everything.
 """
 
 import fcntl
 import json
-import os
 import sys
 from datetime import datetime, date
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-import config
-from ai_provider import get_provider
-from tools import TOOL_SCHEMAS, TOOL_FUNCTIONS, trading_client
+from aitrading import config
+from aitrading.ai_provider import get_provider
+from aitrading.tools import TOOL_SCHEMAS, TOOL_FUNCTIONS, trading_client
 
 # --- Constants ---
 
-SCRIPT_DIR = Path(__file__).parent
-PROMPT_FILE = SCRIPT_DIR / "prompt.md"
-STRATEGY_FILE = SCRIPT_DIR / "strategy.md"
-LOG_DIR = SCRIPT_DIR / "logs"
-STATE_FILE = SCRIPT_DIR / "state.json"
-LOCK_FILE = SCRIPT_DIR / ".run.lock"
+PROMPT_FILE = config.PROMPTS_DIR / "prompt.md"
+STRATEGY_FILE = config.PROMPTS_DIR / "strategy.md"
+LOG_DIR = config.LOG_DIR
+STATE_FILE = config.STATE_FILE
+LOCK_FILE = config.LOCK_FILE
 
 ET = ZoneInfo("America/New_York")
 
@@ -192,7 +190,7 @@ if __name__ == "__main__":
         cmd = sys.argv[1]
 
         if cmd == "--tax-report":
-            from tax_tracker import get_yearly_summary, get_transactions_for_skat
+            from aitrading.tax_tracker import get_yearly_summary, get_transactions_for_skat
             year = int(sys.argv[2]) if len(sys.argv) > 2 else date.today().year
             summary = get_yearly_summary(year)
             if "error" in summary:
@@ -212,8 +210,8 @@ if __name__ == "__main__":
             sys.exit(0)
 
         elif cmd == "--year-end":
-            from tax_tracker import generate_year_end_report
-            from tools import get_positions, get_latest_quote
+            from aitrading.tax_tracker import generate_year_end_report
+            from aitrading.tools import get_positions, get_latest_quote
             year = int(sys.argv[2]) if len(sys.argv) > 2 else date.today().year
             positions = get_positions()
             if isinstance(positions, dict) and "error" in positions:

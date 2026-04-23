@@ -25,8 +25,9 @@ from zoneinfo import ZoneInfo
 ET = ZoneInfo("America/New_York")
 DK = ZoneInfo("Europe/Copenhagen")
 
-SCRIPT_DIR = Path(__file__).parent
-TAX_DIR = SCRIPT_DIR / "tax"
+from . import config
+
+TAX_DIR = config.TAX_DIR
 TRANSACTIONS_FILE = TAX_DIR / "transactions.csv"
 YEAR_END_FILE_TEMPLATE = "year_end_{year}.csv"
 DIVIDENDS_FILE = TAX_DIR / "dividends.csv"
