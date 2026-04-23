@@ -1,0 +1,8 @@
+anthropic>=0.39.0
+alpaca-py>=0.33.0
+python-dotenv>=1.0.0
+numpy>=1.24.0
+
+# Additional AI providers (install only the one you need):
+# pip install openai            # For ChatGPT or Grok
+# pip install google-generativeai  # For Gemini
