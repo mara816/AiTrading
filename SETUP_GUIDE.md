@@ -118,7 +118,7 @@ You need **two types of keys**: one for your AI provider, and one for Alpaca (th
 
 **Option A — From your Windows/WSL terminal via SCP:**
 ```bash
-scp -r /mnt/c/Users/mteu/repos/Personal/AiTrading pi@<PI_IP_ADDRESS>:~/AiTrading
+scp -r /path/to/AiTrading pi@<PI_IP_ADDRESS>:~/AiTrading
 ```
 
 **Option B — From a GitHub repo:**

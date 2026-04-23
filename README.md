@@ -64,7 +64,7 @@ python run.py
 ```bash
 crontab -e
 # Add this line (runs every 5 min, weekdays, during market hours 9:35-15:45 ET):
-*/5 9-15 * * 1-5 cd /mnt/c/Users/mteu/repos/Personal/AiTrading && /mnt/c/Users/mteu/repos/Personal/AiTrading/venv/bin/python run.py >> logs/cron.log 2>&1
+*/5 9-15 * * 1-5 cd /path/to/AiTrading && /path/to/AiTrading/venv/bin/python run.py >> logs/cron.log 2>&1
 ```
 
 ### 4b. Schedule with Windows Task Scheduler (alternative)
@@ -72,9 +72,9 @@ crontab -e
 1. Open Task Scheduler → Create Basic Task
 2. Trigger: Daily, repeat every 5 minutes for 7 hours
 3. Action: Start a program
-   - Program: `C:\Users\mteu\repos\Personal\AiTrading\venv\Scripts\python.exe`
+   - Program: `C:\path\to\AiTrading\venv\Scripts\python.exe`
    - Arguments: `run.py`
-   - Start in: `C:\Users\mteu\repos\Personal\AiTrading`
+   - Start in: `C:\path\to\AiTrading`
 
 ## Files
 
